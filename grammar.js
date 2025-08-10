@@ -123,6 +123,8 @@ module.exports = grammar({
       $._expression,
     ),
 
+    quilt_hole: $ => "{}",
+
     _statement: $ => choice(
       $.expression_statement,
       $._declaration_statement,
@@ -1392,6 +1394,7 @@ module.exports = grammar({
       $.const_block,
       $.macro_invocation,
       '_',
+      $.quilt_hole,
     ),
 
     generic_pattern: $ => seq(
