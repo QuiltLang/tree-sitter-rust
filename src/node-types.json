@@ -360,6 +360,10 @@
         "named": true
       },
       {
+        "type": "quilt_hole",
+        "named": true
+      },
+      {
         "type": "range_pattern",
         "named": true
       },
@@ -3686,6 +3690,10 @@
           "named": true
         },
         {
+          "type": "_expression",
+          "named": true
+        },
+        {
           "type": "expression_statement",
           "named": true
         },
@@ -5430,6 +5438,10 @@
   {
     "type": "pub",
     "named": false
+  },
+  {
+    "type": "quilt_hole",
+    "named": true
   },
   {
     "type": "raw",
