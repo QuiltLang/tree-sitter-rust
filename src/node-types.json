@@ -450,6 +450,10 @@
         "named": true
       },
       {
+        "type": "quilt_hole",
+        "named": true
+      },
+      {
         "type": "reference_type",
         "named": true
       },

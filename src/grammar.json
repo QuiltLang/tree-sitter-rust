@@ -4252,6 +4252,10 @@
           },
           "named": true,
           "value": "primitive_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "quilt_hole"
         }
       ]
     },

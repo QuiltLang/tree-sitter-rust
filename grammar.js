@@ -745,6 +745,7 @@ module.exports = grammar({
       $.bounded_type,
       $.removed_trait_bound,
       alias(choice(...primitiveTypes), $.primitive_type),
+      $.quilt_hole,
     ),
 
     bracketed_type: $ => seq(
