@@ -53,3 +53,55 @@ impl Lift for {} {}
     (type_identifier)
     (quilt_hole)
     (declaration_list)))
+
+================================================================================
+Closure with an empty block body
+================================================================================
+xs.iter().map(|x| {});
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (call_expression
+      function: (field_expression
+        value: (call_expression
+          function: (field_expression
+            value: (identifier)
+            field: (field_identifier))
+          arguments: (arguments))
+        field: (field_identifier))
+      arguments: (arguments
+        (closure_expression
+          parameters: (closure_parameters
+            (identifier))
+          body: (block))))))
+
+================================================================================
+Closure with no parameters and an empty block body
+================================================================================
+let f = || {};
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    pattern: (identifier)
+    value: (closure_expression
+      parameters: (closure_parameters)
+      body: (block))))
+
+================================================================================
+Closure with a reference pattern and an empty block body
+================================================================================
+let g = |&(a, b)| {};
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    pattern: (identifier)
+    value: (closure_expression
+      parameters: (closure_parameters
+        (reference_pattern
+          (tuple_pattern
+            (identifier)
+            (identifier))))
+      body: (block))))

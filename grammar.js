@@ -123,7 +123,13 @@ module.exports = grammar({
       $._expression,
     ),
 
-    quilt_hole: $ => "{}",
+    // A single token, so the lexer sees `{}` as one unit — but at *lower
+    // token precedence* than `{`, so it only wins where `{` cannot start
+    // anything else. Without the precedence, any state that could continue a
+    // pattern preferred the longer `{}` token and forced the hole reading,
+    // which is why `|x| {}` (a closure with an empty block body, valid Rust)
+    // parsed as an or-pattern. See QuiltLang/quilt#241.
+    quilt_hole: $ => token(prec(-1, "{}")),
 
     _statement: $ => choice(
       $.expression_statement,
