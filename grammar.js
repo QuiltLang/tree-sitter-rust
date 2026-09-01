@@ -68,6 +68,7 @@ module.exports = grammar({
 
   externals: $ => [
     $.string_content,
+    $.string_close,
     $._raw_string_literal_start,
     $.raw_string_literal_content,
     $._raw_string_literal_end,
@@ -110,6 +111,7 @@ module.exports = grammar({
     [$.array_expression],
     [$.visibility_modifier],
     [$.visibility_modifier, $.scoped_identifier, $.scoped_type_identifier],
+    [$.foreign_mod_item, $.function_modifiers],
   ],
 
   word: $ => $.identifier,
@@ -129,7 +131,7 @@ module.exports = grammar({
     // pattern preferred the longer `{}` token and forced the hole reading,
     // which is why `|x| {}` (a closure with an empty block body, valid Rust)
     // parsed as an or-pattern. See QuiltLang/quilt#241.
-    quilt_hole: $ => token(prec(-1, "{}")),
+    quilt_hole: $ => token(prec(-1, '{}')),
 
     _statement: $ => choice(
       $.expression_statement,
@@ -290,7 +292,7 @@ module.exports = grammar({
     ),
 
     foreign_mod_item: $ => seq(
-      optional($.visibility_modifier),
+      optional('unsafe'),
       $.extern_modifier,
       choice(
         ';',
@@ -1557,7 +1559,7 @@ module.exports = grammar({
         $.escape_sequence,
         $.string_content,
       )),
-      token.immediate('"'),
+      alias($.string_close, '"'),
     ),
 
     raw_string_literal: $ => seq(
@@ -1664,6 +1666,7 @@ module.exports = grammar({
       'default',
       'union',
       'gen',
+      'raw',
     ), $.identifier),
 
     _type_identifier: $ => alias($.identifier, $.type_identifier),
