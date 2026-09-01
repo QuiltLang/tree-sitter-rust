@@ -131,7 +131,7 @@ module.exports = grammar({
     // pattern preferred the longer `{}` token and forced the hole reading,
     // which is why `|x| {}` (a closure with an empty block body, valid Rust)
     // parsed as an or-pattern. See QuiltLang/quilt#241.
-    quilt_hole: $ => token(prec(-1, "{}")),
+    quilt_hole: $ => token(prec(-1, '{}')),
 
     _statement: $ => choice(
       $.expression_statement,
