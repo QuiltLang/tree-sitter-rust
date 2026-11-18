@@ -133,6 +133,10 @@ module.exports = grammar({
     // parsed as an or-pattern. See QuiltLang/quilt#241.
     quilt_hole: $ => token(prec(-1, '{}')),
 
+    // `{}` lexed as `{` then `}`, for the one name position (`const`) where a
+    // block can also start. Aliased to `quilt_hole` where it is used.
+    _quilt_hole_braces: $ => seq('{', '}'),
+
     _statement: $ => choice(
       $.expression_statement,
       $._declaration_statement,
@@ -284,7 +288,7 @@ module.exports = grammar({
     mod_item: $ => seq(
       optional($.visibility_modifier),
       'mod',
-      field('name', $.identifier),
+      field('name', choice($.identifier, $.quilt_hole)),
       choice(
         ';',
         field('body', $.declaration_list),
@@ -300,16 +304,19 @@ module.exports = grammar({
       ),
     ),
 
+    // A hole may stand for any number of items: Quilt splices generated
+    // items into an `impl`, `mod`, `trait` or `extern` body. No item starts
+    // with `{`, so the hole token never competes with a block here.
     declaration_list: $ => seq(
       '{',
-      repeat($._declaration_statement),
+      repeat(choice($._declaration_statement, $.quilt_hole)),
       '}',
     ),
 
     struct_item: $ => seq(
       optional($.visibility_modifier),
       'struct',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       choice(
         seq(
@@ -328,7 +335,7 @@ module.exports = grammar({
     union_item: $ => seq(
       optional($.visibility_modifier),
       'union',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       optional($.where_clause),
       field('body', $.field_declaration_list),
@@ -337,7 +344,7 @@ module.exports = grammar({
     enum_item: $ => seq(
       optional($.visibility_modifier),
       'enum',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       optional($.where_clause),
       field('body', $.enum_variant_list),
@@ -345,7 +352,7 @@ module.exports = grammar({
 
     enum_variant_list: $ => seq(
       '{',
-      sepBy(',', seq(repeat($.attribute_item), $.enum_variant)),
+      sepBy(',', seq(repeat($.attribute_item), choice($.enum_variant, $.quilt_hole))),
       optional(','),
       '}',
     ),
@@ -365,7 +372,7 @@ module.exports = grammar({
 
     field_declaration_list: $ => seq(
       '{',
-      sepBy(',', seq(repeat($.attribute_item), $.field_declaration)),
+      sepBy(',', seq(repeat($.attribute_item), choice($.field_declaration, $.quilt_hole))),
       optional(','),
       '}',
     ),
@@ -403,7 +410,15 @@ module.exports = grammar({
     const_item: $ => seq(
       optional($.visibility_modifier),
       'const',
-      field('name', $.identifier),
+      field('name', choice(
+        $.identifier,
+        $.quilt_hole,
+        // In statement position `const {` also starts a `const_block`, and
+        // the lexer prefers `{` to the lower-precedence hole token, so the
+        // hole arrives as two tokens. The `:` that must follow a const name
+        // tells the two apart.
+        alias($._quilt_hole_braces, $.quilt_hole),
+      )),
       ':',
       field('type', $._type),
       optional(
@@ -423,7 +438,7 @@ module.exports = grammar({
       optional('ref'),
 
       optional($.mutable_specifier),
-      field('name', $.identifier),
+      field('name', choice($.identifier, $.quilt_hole)),
       ':',
       field('type', $._type),
       optional(seq(
@@ -436,7 +451,7 @@ module.exports = grammar({
     type_item: $ => seq(
       optional($.visibility_modifier),
       'type',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       optional($.where_clause),
       '=',
@@ -449,7 +464,7 @@ module.exports = grammar({
       optional($.visibility_modifier),
       optional($.function_modifiers),
       'fn',
-      field('name', choice($.identifier, $.metavariable)),
+      field('name', choice($.identifier, $.metavariable, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       field('parameters', $.parameters),
       optional(seq('->', field('return_type', $._type))),
@@ -461,7 +476,7 @@ module.exports = grammar({
       optional($.visibility_modifier),
       optional($.function_modifiers),
       'fn',
-      field('name', choice($.identifier, $.metavariable)),
+      field('name', choice($.identifier, $.metavariable, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       field('parameters', $.parameters),
       optional(seq('->', field('return_type', $._type))),
@@ -523,7 +538,7 @@ module.exports = grammar({
       optional($.visibility_modifier),
       optional('unsafe'),
       'trait',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
       field('type_parameters', optional($.type_parameters)),
       field('bounds', optional($.trait_bounds)),
       optional($.where_clause),
@@ -1248,11 +1263,18 @@ module.exports = grammar({
     match_block: $ => seq(
       '{',
       optional(seq(
-        repeat($.match_arm),
-        alias($.last_match_arm, $.match_arm),
+        repeat(choice($.match_arm, $._match_arm_hole)),
+        choice(alias($.last_match_arm, $.match_arm), $._match_arm_hole),
       )),
       '}',
     ),
+
+    // A hole standing for any number of whole arms, before, between or after
+    // literal ones. Where a hole could also begin an arm's pattern, the token
+    // after it decides: `=>`, `|` or `if` continue the pattern, anything else
+    // starts the next arm. `|` is the one ambiguous case, since an arm may
+    // also begin with `|`; it continues the pattern (`{} | 0 => …`).
+    _match_arm_hole: $ => prec(-1, seq($.quilt_hole, optional(','))),
 
     match_arm: $ => prec.right(seq(
       repeat(choice($.attribute_item, $.inner_attribute_item)),

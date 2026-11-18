@@ -9,7 +9,6 @@ Quilt Expression
     (integer_literal)
     (integer_literal)))
 
-
 ================================================================================
 Quilt Statement
 ================================================================================
@@ -105,3 +104,252 @@ let g = |&(a, b)| {};
             (identifier)
             (identifier))))
       body: (block))))
+
+================================================================================
+Quilt Hole in an enum variant list
+================================================================================
+enum Color { {} }
+enum Color { Red, {} }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_item
+    (type_identifier)
+    (enum_variant_list
+      (quilt_hole)))
+  (enum_item
+    (type_identifier)
+    (enum_variant_list
+      (enum_variant
+        (identifier))
+      (quilt_hole))))
+
+================================================================================
+Quilt Hole in a struct field list
+================================================================================
+struct S { {} }
+struct S { x: u32, {} }
+struct E {}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_item
+    (type_identifier)
+    (field_declaration_list
+      (quilt_hole)))
+  (struct_item
+    (type_identifier)
+    (field_declaration_list
+      (field_declaration
+        (field_identifier)
+        (primitive_type))
+      (quilt_hole)))
+  (struct_item
+    (type_identifier)
+    (field_declaration_list)))
+
+================================================================================
+Quilt Hole as an item name
+================================================================================
+fn {}() -> u32 { 1 }
+struct {} { x: u32 }
+enum {} { A }
+type {} = u32;
+static {}: u32 = 1;
+mod {} {}
+trait {} {}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (quilt_hole)
+    (parameters)
+    (primitive_type)
+    (block
+      (integer_literal)))
+  (struct_item
+    (quilt_hole)
+    (field_declaration_list
+      (field_declaration
+        (field_identifier)
+        (primitive_type))))
+  (enum_item
+    (quilt_hole)
+    (enum_variant_list
+      (enum_variant
+        (identifier))))
+  (type_item
+    (quilt_hole)
+    (primitive_type))
+  (static_item
+    (quilt_hole)
+    (primitive_type)
+    (integer_literal))
+  (mod_item
+    (quilt_hole)
+    (declaration_list))
+  (trait_item
+    (quilt_hole)
+    (declaration_list)))
+
+================================================================================
+Quilt Hole as a const name, where const can start a block
+================================================================================
+const {}: u32 = 1;
+fn f() { const {}: u32 = 1; let x = const {}; }
+impl X { const {}: u32 = 1; }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (const_item
+    (quilt_hole)
+    (primitive_type)
+    (integer_literal))
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (const_item
+        (quilt_hole)
+        (primitive_type)
+        (integer_literal))
+      (let_declaration
+        (identifier)
+        (const_block
+          (block)))))
+  (impl_item
+    (type_identifier)
+    (declaration_list
+      (const_item
+        (quilt_hole)
+        (primitive_type)
+        (integer_literal)))))
+
+================================================================================
+Quilt Hole as an item in an impl or mod body
+================================================================================
+impl X { {} }
+impl X { fn g() {} {} }
+mod m { fn g() {} {} }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (impl_item
+    (type_identifier)
+    (declaration_list
+      (quilt_hole)))
+  (impl_item
+    (type_identifier)
+    (declaration_list
+      (function_item
+        (identifier)
+        (parameters)
+        (block))
+      (quilt_hole)))
+  (mod_item
+    (identifier)
+    (declaration_list
+      (function_item
+        (identifier)
+        (parameters)
+        (block))
+      (quilt_hole))))
+
+================================================================================
+Quilt Hole as match arms
+================================================================================
+match x { {} }
+match x { {} _ => 0 }
+match x { 0 => 1, {} }
+match x { 0 => {} {} }
+match x { 0 => 1, {}, _ => 2 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (match_arm
+          (match_pattern)
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (integer_literal))
+          (integer_literal))
+        (quilt_hole))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (integer_literal))
+          (block))
+        (quilt_hole))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (integer_literal))
+          (integer_literal))
+        (quilt_hole)
+        (match_arm
+          (match_pattern)
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole that begins a match arm pattern
+================================================================================
+match x { {} => 0 }
+match x { {} | 1 => 0 }
+match x { {} if c => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (quilt_hole))
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (or_pattern
+              (quilt_hole)
+              (integer_literal)))
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (quilt_hole)
+            (identifier))
+          (integer_literal))))))

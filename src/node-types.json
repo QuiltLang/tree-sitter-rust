@@ -1377,6 +1377,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "quilt_hole",
+            "named": true
           }
         ]
       },
@@ -1486,6 +1490,10 @@
         {
           "type": "_declaration_statement",
           "named": true
+        },
+        {
+          "type": "quilt_hole",
+          "named": true
         }
       ]
     }
@@ -1568,6 +1576,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "quilt_hole",
+            "named": true
+          },
           {
             "type": "type_identifier",
             "named": true
@@ -1664,6 +1676,10 @@
         },
         {
           "type": "enum_variant",
+          "named": true
+        },
+        {
+          "type": "quilt_hole",
           "named": true
         }
       ]
@@ -1789,6 +1805,10 @@
         },
         {
           "type": "field_declaration",
+          "named": true
+        },
+        {
+          "type": "quilt_hole",
           "named": true
         }
       ]
@@ -2044,6 +2064,10 @@
           {
             "type": "metavariable",
             "named": true
+          },
+          {
+            "type": "quilt_hole",
+            "named": true
           }
         ]
       },
@@ -2126,6 +2150,10 @@
           },
           {
             "type": "metavariable",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           }
         ]
@@ -2903,6 +2931,10 @@
         {
           "type": "match_arm",
           "named": true
+        },
+        {
+          "type": "quilt_hole",
+          "named": true
         }
       ]
     }
@@ -2987,6 +3019,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           }
         ]
@@ -3233,6 +3269,11 @@
         ]
       }
     }
+  },
+  {
+    "type": "quilt_hole",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "range_expression",
@@ -3717,6 +3758,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "quilt_hole",
+            "named": true
           }
         ]
       },
@@ -3831,6 +3876,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "quilt_hole",
+            "named": true
+          },
           {
             "type": "type_identifier",
             "named": true
@@ -4187,6 +4236,10 @@
         "required": true,
         "types": [
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "type_identifier",
             "named": true
           }
@@ -4441,6 +4494,10 @@
         "required": true,
         "types": [
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "type_identifier",
             "named": true
           }
@@ -4582,6 +4639,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "quilt_hole",
+            "named": true
+          },
           {
             "type": "type_identifier",
             "named": true
@@ -5440,10 +5501,6 @@
   {
     "type": "pub",
     "named": false
-  },
-  {
-    "type": "quilt_hole",
-    "named": true
   },
   {
     "type": "raw",
