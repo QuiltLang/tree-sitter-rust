@@ -1703,6 +1703,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "quilt_hole",
+            "named": true
           }
         ]
       },
@@ -1831,6 +1835,10 @@
         "types": [
           {
             "type": "field_identifier",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           }
         ]
@@ -3644,6 +3652,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "quilt_hole",
+            "named": true
+          },
           {
             "type": "type_identifier",
             "named": true

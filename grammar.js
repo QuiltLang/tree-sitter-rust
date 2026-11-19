@@ -358,18 +358,33 @@ module.exports = grammar({
       '}',
     ),
 
-    enum_variant: $ => seq(
-      optional($.visibility_modifier),
-      field('name', $.identifier),
-      field('body', optional(choice(
+    enum_variant: $ => {
+      const body = field('body', choice(
         $.field_declaration_list,
         $.ordered_field_declaration_list,
-      ))),
-      optional(seq(
-        '=',
-        field('value', $._expression),
-      )),
-    ),
+      ));
+      const value = seq('=', field('value', $._expression));
+      return choice(
+        seq(
+          optional($.visibility_modifier),
+          field('name', $.identifier),
+          optional(body),
+          optional(value),
+        ),
+        // A hole as a variant's name needs something after it, a body or a
+        // discriminant, or a visibility before it: a hole on its own in the
+        // list stands for whole variants (`enum_variant_list`).
+        seq(
+          optional($.visibility_modifier),
+          field('name', $.quilt_hole),
+          choice(seq(body, optional(value)), value),
+        ),
+        seq(
+          $.visibility_modifier,
+          field('name', $.quilt_hole),
+        ),
+      );
+    },
 
     field_declaration_list: $ => seq(
       '{',
@@ -380,7 +395,7 @@ module.exports = grammar({
 
     field_declaration: $ => seq(
       optional($.visibility_modifier),
-      field('name', $._field_identifier),
+      field('name', choice($._field_identifier, $.quilt_hole)),
       ':',
       field('type', $._type),
     ),
@@ -1038,7 +1053,7 @@ module.exports = grammar({
         alias($.generic_type_with_turbofish, $.generic_type),
       ))),
       '::',
-      field('name', choice($.identifier, $.super)),
+      field('name', choice($.identifier, $.super, $.quilt_hole)),
     ),
 
     // A path whose first segment is a hole (`{}::{}`, `{}::a`). Where an
@@ -1073,7 +1088,7 @@ module.exports = grammar({
         alias($.generic_type_with_turbofish, $.generic_type),
       ))),
       '::',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
     )),
 
     scoped_type_identifier: $ => seq(
@@ -1084,7 +1099,7 @@ module.exports = grammar({
         $.generic_type,
       ))),
       '::',
-      field('name', $._type_identifier),
+      field('name', choice($._type_identifier, $.quilt_hole)),
     ),
 
     range_expression: $ => prec.left(PREC.range, choice(
