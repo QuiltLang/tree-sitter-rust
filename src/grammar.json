@@ -3594,8 +3594,22 @@
           "type": "FIELD",
           "name": "pattern",
           "content": {
-            "type": "SYMBOL",
-            "name": "_pattern"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_pattern"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_hole_struct_pattern"
+                },
+                "named": true,
+                "value": "struct_pattern"
+              }
+            ]
           }
         },
         {
@@ -7231,8 +7245,22 @@
           "type": "FIELD",
           "name": "pattern",
           "content": {
-            "type": "SYMBOL",
-            "name": "_pattern"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_pattern"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_hole_struct_pattern"
+                },
+                "named": true,
+                "value": "struct_pattern"
+              }
+            ]
           }
         },
         {
@@ -8715,6 +8743,15 @@
           }
         },
         {
+          "type": "SYMBOL",
+          "name": "_struct_pattern_fields"
+        }
+      ]
+    },
+    "_struct_pattern_fields": {
+      "type": "SEQ",
+      "members": [
+        {
           "type": "STRING",
           "value": "{"
         },
@@ -8734,6 +8771,10 @@
                     {
                       "type": "SYMBOL",
                       "name": "remaining_field_pattern"
+                    },
+                    {
+                      "type": "SYMBOL",
+                      "name": "quilt_hole"
                     }
                   ]
                 },
@@ -8756,6 +8797,10 @@
                           {
                             "type": "SYMBOL",
                             "name": "remaining_field_pattern"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "quilt_hole"
                           }
                         ]
                       }
@@ -8784,6 +8829,23 @@
         {
           "type": "STRING",
           "value": "}"
+        }
+      ]
+    },
+    "_hole_struct_pattern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "SYMBOL",
+            "name": "quilt_hole"
+          }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_struct_pattern_fields"
         }
       ]
     },

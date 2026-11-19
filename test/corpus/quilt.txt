@@ -353,3 +353,99 @@ match x { {} if c => 0 }
             (quilt_hole)
             (identifier))
           (integer_literal))))))
+
+================================================================================
+Quilt Hole in a struct pattern's field list
+================================================================================
+let S { {} } = x;
+let S { a, {}, .. } = x;
+match x { S { {} } => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (struct_pattern
+      (type_identifier)
+      (quilt_hole))
+    (identifier))
+  (let_declaration
+    (struct_pattern
+      (type_identifier)
+      (field_pattern
+        (shorthand_field_identifier))
+      (quilt_hole)
+      (remaining_field_pattern))
+    (identifier))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (struct_pattern
+              (type_identifier)
+              (quilt_hole)))
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as the type of a let's struct pattern
+================================================================================
+let {} { {} } = x;
+let {} { a, .. } = x else { return };
+if let {} { a } = x {}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (struct_pattern
+      (quilt_hole)
+      (quilt_hole))
+    (identifier))
+  (let_declaration
+    (struct_pattern
+      (quilt_hole)
+      (field_pattern
+        (shorthand_field_identifier))
+      (remaining_field_pattern))
+    (identifier)
+    (block
+      (return_expression)))
+  (expression_statement
+    (if_expression
+      (let_condition
+        (struct_pattern
+          (quilt_hole)
+          (field_pattern
+            (shorthand_field_identifier)))
+        (identifier))
+      (block))))
+
+================================================================================
+Quilt Hole arms followed by an arm beginning with a hole
+================================================================================
+match x { {} {} => 0 }
+match x { {} {} _ => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (match_arm
+          (match_pattern
+            (quilt_hole))
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (quilt_hole)
+        (match_arm
+          (match_pattern)
+          (integer_literal))))))

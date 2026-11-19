@@ -628,7 +628,10 @@ module.exports = grammar({
     let_declaration: $ => seq(
       'let',
       optional($.mutable_specifier),
-      field('pattern', $._pattern),
+      field('pattern', choice(
+        $._pattern,
+        alias($._hole_struct_pattern, $.struct_pattern),
+      )),
       optional(seq(
         ':',
         field('type', $._type),
@@ -1227,7 +1230,10 @@ module.exports = grammar({
 
     let_condition: $ => seq(
       'let',
-      field('pattern', $._pattern),
+      field('pattern', choice(
+        $._pattern,
+        alias($._hole_struct_pattern, $.struct_pattern),
+      )),
       '=',
       field('value', prec.left(PREC.and, $._expression)),
     ),
@@ -1468,10 +1474,26 @@ module.exports = grammar({
         $._type_identifier,
         $.scoped_type_identifier,
       )),
+      $._struct_pattern_fields,
+    ),
+
+    // A hole may stand for any number of fields, beside literal ones.
+    _struct_pattern_fields: $ => seq(
       '{',
-      sepBy(',', choice($.field_pattern, $.remaining_field_pattern)),
+      sepBy(',', choice($.field_pattern, $.remaining_field_pattern, $.quilt_hole)),
       optional(','),
       '}',
+    ),
+
+    // A struct pattern whose type is a hole, aliased to `struct_pattern`. Only
+    // a `let`'s whole pattern may be one: in a `match`, a hole may also stand
+    // for whole arms, and the lexer prefers `{` to the low-precedence hole
+    // token wherever `{` is valid, so allowing it there would read a hole arm
+    // followed by an arm beginning with a hole (`{} {} _ => 0`) as one struct
+    // pattern.
+    _hole_struct_pattern: $ => seq(
+      field('type', $.quilt_hole),
+      $._struct_pattern_fields,
     ),
 
     field_pattern: $ => seq(

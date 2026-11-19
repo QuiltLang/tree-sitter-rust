@@ -4063,6 +4063,10 @@
         "required": true,
         "types": [
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "scoped_type_identifier",
             "named": true
           },
@@ -4079,6 +4083,10 @@
       "types": [
         {
           "type": "field_pattern",
+          "named": true
+        },
+        {
+          "type": "quilt_hole",
           "named": true
         },
         {
