@@ -1703,6 +1703,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "quilt_hole",
+            "named": true
           }
         ]
       },
@@ -1831,6 +1835,10 @@
         "types": [
           {
             "type": "field_identifier",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           }
         ]
@@ -3583,6 +3591,10 @@
             "named": true
           },
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "super",
             "named": true
           }
@@ -3613,6 +3625,10 @@
             "named": true
           },
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "scoped_identifier",
             "named": true
           },
@@ -3636,6 +3652,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "quilt_hole",
+            "named": true
+          },
           {
             "type": "type_identifier",
             "named": true
@@ -4063,6 +4083,10 @@
         "required": true,
         "types": [
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "scoped_type_identifier",
             "named": true
           },
@@ -4079,6 +4103,10 @@
       "types": [
         {
           "type": "field_pattern",
+          "named": true
+        },
+        {
+          "type": "quilt_hole",
           "named": true
         },
         {
@@ -4495,6 +4523,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           },
           {

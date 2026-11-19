@@ -353,3 +353,361 @@ match x { {} if c => 0 }
             (quilt_hole)
             (identifier))
           (integer_literal))))))
+
+================================================================================
+Quilt Hole in a struct pattern's field list
+================================================================================
+let S { {} } = x;
+let S { a, {}, .. } = x;
+match x { S { {} } => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (struct_pattern
+      (type_identifier)
+      (quilt_hole))
+    (identifier))
+  (let_declaration
+    (struct_pattern
+      (type_identifier)
+      (field_pattern
+        (shorthand_field_identifier))
+      (quilt_hole)
+      (remaining_field_pattern))
+    (identifier))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (struct_pattern
+              (type_identifier)
+              (quilt_hole)))
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as the type of a struct pattern
+================================================================================
+let {} { {} } = x;
+let {} { a, .. } = x else { return };
+if let {} { a } = x {}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (struct_pattern
+      (quilt_hole)
+      (quilt_hole))
+    (identifier))
+  (let_declaration
+    (struct_pattern
+      (quilt_hole)
+      (field_pattern
+        (shorthand_field_identifier))
+      (remaining_field_pattern))
+    (identifier)
+    (block
+      (return_expression)))
+  (expression_statement
+    (if_expression
+      (let_condition
+        (struct_pattern
+          (quilt_hole)
+          (field_pattern
+            (shorthand_field_identifier)))
+        (identifier))
+      (block))))
+
+================================================================================
+Quilt Hole arms followed by an arm beginning with a hole
+================================================================================
+match x { {} {} => 0 }
+match x { {} {} _ => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (match_arm
+          (match_pattern
+            (quilt_hole))
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (quilt_hole)
+        (match_arm
+          (match_pattern)
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as the type of a struct pattern in a match arm
+================================================================================
+match x { {} { {} } => 0, {} { a, .. } => 1 }
+match x { {} {} {} { a } => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (struct_pattern
+              (quilt_hole)
+              (quilt_hole)))
+          (integer_literal))
+        (match_arm
+          (match_pattern
+            (struct_pattern
+              (quilt_hole)
+              (field_pattern
+                (shorthand_field_identifier))
+              (remaining_field_pattern)))
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (quilt_hole)
+        (match_arm
+          (match_pattern
+            (struct_pattern
+              (quilt_hole)
+              (field_pattern
+                (shorthand_field_identifier))))
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as the type of a tuple struct pattern
+================================================================================
+let {}(a, {}) = x;
+match x { {}({}) => 0, {}({}, {}) => 1 }
+match x { {} (a, b) => 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (tuple_struct_pattern
+      (quilt_hole)
+      (identifier)
+      (quilt_hole))
+    (identifier))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (tuple_struct_pattern
+              (quilt_hole)
+              (quilt_hole)))
+          (integer_literal))
+        (match_arm
+          (match_pattern
+            (tuple_struct_pattern
+              (quilt_hole)
+              (quilt_hole)
+              (quilt_hole)))
+          (integer_literal)))))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (quilt_hole)
+        (match_arm
+          (match_pattern
+            (tuple_pattern
+              (identifier)
+              (identifier)))
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as the first segments of a path
+================================================================================
+let e = {}::{};
+let e = {}::a(1);
+let {}::{}(a) = x;
+match x { {}::{}({}) => 0, {}::{} => 1 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (identifier)
+    (scoped_identifier
+      (quilt_hole)
+      (quilt_hole)))
+  (let_declaration
+    (identifier)
+    (call_expression
+      (scoped_identifier
+        (quilt_hole)
+        (identifier))
+      (arguments
+        (integer_literal))))
+  (let_declaration
+    (tuple_struct_pattern
+      (scoped_identifier
+        (quilt_hole)
+        (quilt_hole))
+      (identifier))
+    (identifier))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (tuple_struct_pattern
+              (scoped_identifier
+                (quilt_hole)
+                (quilt_hole))
+              (quilt_hole)))
+          (integer_literal))
+        (match_arm
+          (match_pattern
+            (scoped_identifier
+              (quilt_hole)
+              (quilt_hole)))
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as the last segment of a path
+================================================================================
+f(Site::{}, n);
+let a = a::b::{};
+let s = S::{} { x: 1 };
+let World::{}(a) = x;
+match x { Site::{} => 0, a::b::{} { x } => 1 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (call_expression
+      (identifier)
+      (arguments
+        (scoped_identifier
+          (identifier)
+          (quilt_hole))
+        (identifier))))
+  (let_declaration
+    (identifier)
+    (scoped_identifier
+      (scoped_identifier
+        (identifier)
+        (identifier))
+      (quilt_hole)))
+  (let_declaration
+    (identifier)
+    (struct_expression
+      (scoped_type_identifier
+        (identifier)
+        (quilt_hole))
+      (field_initializer_list
+        (field_initializer
+          (field_identifier)
+          (integer_literal)))))
+  (let_declaration
+    (tuple_struct_pattern
+      (scoped_identifier
+        (identifier)
+        (quilt_hole))
+      (identifier))
+    (identifier))
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_block
+        (match_arm
+          (match_pattern
+            (scoped_identifier
+              (identifier)
+              (quilt_hole)))
+          (integer_literal))
+        (match_arm
+          (match_pattern
+            (struct_pattern
+              (scoped_type_identifier
+                (scoped_identifier
+                  (identifier)
+                  (identifier))
+                (quilt_hole))
+              (field_pattern
+                (shorthand_field_identifier))))
+          (integer_literal))))))
+
+================================================================================
+Quilt Hole as an enum variant's name
+================================================================================
+enum E { {}({}), A, {} { {} }, {} = 1 }
+enum E { A, {}, pub {} }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_item
+    (type_identifier)
+    (enum_variant_list
+      (enum_variant
+        (quilt_hole)
+        (ordered_field_declaration_list
+          (quilt_hole)))
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (quilt_hole)
+        (field_declaration_list
+          (quilt_hole)))
+      (enum_variant
+        (quilt_hole)
+        (integer_literal))))
+  (enum_item
+    (type_identifier)
+    (enum_variant_list
+      (enum_variant
+        (identifier))
+      (quilt_hole)
+      (enum_variant
+        (visibility_modifier)
+        (quilt_hole)))))
+
+================================================================================
+Quilt Hole as a field's name after a visibility
+================================================================================
+struct S { pub {}: u64, pub(crate) {}: {}, {}: u8, {} }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_item
+    (type_identifier)
+    (field_declaration_list
+      (field_declaration
+        (visibility_modifier)
+        (quilt_hole)
+        (primitive_type))
+      (field_declaration
+        (visibility_modifier
+          (crate))
+        (quilt_hole)
+        (quilt_hole))
+      (field_declaration
+        (quilt_hole)
+        (primitive_type))
+      (quilt_hole))))
