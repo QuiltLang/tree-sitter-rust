@@ -112,6 +112,7 @@ module.exports = grammar({
     [$.visibility_modifier],
     [$.visibility_modifier, $.scoped_identifier, $.scoped_type_identifier],
     [$.foreign_mod_item, $.function_modifiers],
+    [$._match_arm_hole, $._match_hole_struct_pattern],
   ],
 
   word: $ => $.identifier,
@@ -628,10 +629,7 @@ module.exports = grammar({
     let_declaration: $ => seq(
       'let',
       optional($.mutable_specifier),
-      field('pattern', choice(
-        $._pattern,
-        alias($._hole_struct_pattern, $.struct_pattern),
-      )),
+      field('pattern', $._pattern),
       optional(seq(
         ':',
         field('type', $._type),
@@ -969,6 +967,7 @@ module.exports = grammar({
       prec.left($._reserved_identifier),
       $.self,
       $.scoped_identifier,
+      alias($._expression_path_hole, $.scoped_identifier),
       $.generic_function,
       $.await_expression,
       $.field_expression,
@@ -1041,6 +1040,32 @@ module.exports = grammar({
       '::',
       field('name', choice($.identifier, $.super)),
     ),
+
+    // A path whose first segment is a hole (`{}::{}`, `{}::a`). Where an
+    // expression or an arm's pattern starts, `{` is valid too and the lexer
+    // prefers it, so the hole arrives as `{` `}`; the `::` after it tells it
+    // from a block, and wins over one (`{} ::a`, a block statement followed
+    // by an absolute path, is not worth keeping from `{}::a`). Other patterns
+    // see the hole token.
+    _expression_path_hole: $ => seq(
+      field('path', alias($._quilt_path_hole_braces, $.quilt_hole)),
+      '::',
+      field('name', choice($.identifier, $.quilt_hole)),
+    ),
+
+    _match_path_hole: $ => seq(
+      field('path', alias($._quilt_hole_braces, $.quilt_hole)),
+      '::',
+      field('name', choice($.identifier, $.quilt_hole)),
+    ),
+
+    _pattern_path_hole: $ => seq(
+      field('path', $.quilt_hole),
+      '::',
+      field('name', choice($.identifier, $.quilt_hole)),
+    ),
+
+    _quilt_path_hole_braces: _ => prec(1, seq('{', '}')),
 
     scoped_type_identifier_in_expression_position: $ => prec(-2, seq(
       field('path', optional(choice(
@@ -1230,10 +1255,7 @@ module.exports = grammar({
 
     let_condition: $ => seq(
       'let',
-      field('pattern', choice(
-        $._pattern,
-        alias($._hole_struct_pattern, $.struct_pattern),
-      )),
+      field('pattern', $._pattern),
       '=',
       field('value', prec.left(PREC.and, $._expression)),
     ),
@@ -1280,7 +1302,10 @@ module.exports = grammar({
     // after it decides: `=>`, `|` or `if` continue the pattern, anything else
     // starts the next arm. `|` is the one ambiguous case, since an arm may
     // also begin with `|`; it continues the pattern (`{} | 0 => …`).
-    _match_arm_hole: $ => prec(-1, seq($.quilt_hole, optional(','))),
+    _match_arm_hole: $ => prec(-1, seq(
+      choice($.quilt_hole, alias($._quilt_hole_braces, $.quilt_hole)),
+      optional(','),
+    )),
 
     match_arm: $ => prec.right(seq(
       repeat(choice($.attribute_item, $.inner_attribute_item)),
@@ -1301,9 +1326,52 @@ module.exports = grammar({
     ),
 
     match_pattern: $ => seq(
-      $._pattern,
+      choice($._pattern, $._match_hole_pattern),
       optional(seq('if', field('condition', $._condition))),
     ),
+
+    // An arm's pattern that begins with a hole. A hole may be a struct or
+    // tuple struct pattern's path (`{} { a }`, `{}(a)`), and once `{` can
+    // follow a hole the lexer prefers it to the low-precedence hole token
+    // wherever both are valid. Both are valid wherever an arm can start
+    // (after a hole standing for whole arms, `{} {} => 0`), so there the
+    // hole arrives as `{` `}`, as it does after `const`, and these are the
+    // patterns that can begin with it.
+    _match_hole_pattern: $ => choice(
+      alias($._quilt_hole_braces, $.quilt_hole),
+      alias($._match_path_hole, $.scoped_identifier),
+      alias($._match_hole_struct_pattern, $.struct_pattern),
+      alias($._match_hole_tuple_struct_pattern, $.tuple_struct_pattern),
+      alias($._match_hole_or_pattern, $.or_pattern),
+    ),
+
+    // `{} {` is also a hole standing for arms followed by an arm that begins
+    // with one, so both readings are kept until the rest of the arm decides
+    // (`{} { a } =>` is a struct pattern, `{} {} _ =>` two arms). When both
+    // still fit (`{} {} => 0`), the arms win, as before this rule existed.
+    _match_hole_struct_pattern: $ => prec.dynamic(-1, prec(-1, seq(
+      field('type', alias($._quilt_hole_braces, $.quilt_hole)),
+      $._struct_pattern_fields,
+    ))),
+
+    // A tuple struct's `(` must touch the hole (`{}(a)`): `{} (a, b)` stays
+    // a hole standing for arms followed by a tuple pattern's arm.
+    _match_hole_tuple_struct_pattern: $ => seq(
+      field('type', choice(
+        alias($._quilt_hole_braces, $.quilt_hole),
+        alias($._match_path_hole, $.scoped_identifier),
+      )),
+      token.immediate('('),
+      sepBy(',', $._pattern),
+      optional(','),
+      ')',
+    ),
+
+    _match_hole_or_pattern: $ => prec.right(seq(
+      alias($._quilt_hole_braces, $.quilt_hole),
+      '|',
+      $._pattern,
+    )),
 
     while_expression: $ => seq(
       optional(seq($.label, ':')),
@@ -1416,6 +1484,7 @@ module.exports = grammar({
       $.identifier,
       $.scoped_identifier,
       $.generic_pattern,
+      alias($._pattern_path_hole, $.scoped_identifier),
       $.tuple_pattern,
       $.tuple_struct_pattern,
       $.struct_pattern,
@@ -1462,17 +1531,17 @@ module.exports = grammar({
         $.identifier,
         $.scoped_identifier,
         alias($.generic_type_with_turbofish, $.generic_type),
+        $.quilt_hole,
+        alias($._pattern_path_hole, $.scoped_identifier),
       )),
-      '(',
-      sepBy(',', $._pattern),
-      optional(','),
-      ')',
+      ...tupleStructPatternFields($),
     ),
 
     struct_pattern: $ => seq(
       field('type', choice(
         $._type_identifier,
         $.scoped_type_identifier,
+        $.quilt_hole,
       )),
       $._struct_pattern_fields,
     ),
@@ -1483,17 +1552,6 @@ module.exports = grammar({
       sepBy(',', choice($.field_pattern, $.remaining_field_pattern, $.quilt_hole)),
       optional(','),
       '}',
-    ),
-
-    // A struct pattern whose type is a hole, aliased to `struct_pattern`. Only
-    // a `let`'s whole pattern may be one: in a `match`, a hole may also stand
-    // for whole arms, and the lexer prefers `{` to the low-precedence hole
-    // token wherever `{` is valid, so allowing it there would read a hole arm
-    // followed by an arm beginning with a hole (`{} {} _ => 0`) as one struct
-    // pattern.
-    _hole_struct_pattern: $ => seq(
-      field('type', $.quilt_hole),
-      $._struct_pattern_fields,
     ),
 
     field_pattern: $ => seq(
@@ -1736,6 +1794,18 @@ function sepBy1(sep, rule) {
   return seq(rule, repeat(seq(sep, rule)));
 }
 
+
+/**
+ * The parenthesized fields of a tuple struct pattern, spliced into each rule
+ * that has them (a hidden rule would hide them from the `parameters` conflict).
+ *
+ * @param {GrammarSymbols<string>} $
+ *
+ * @returns {Rule[]}
+ */
+function tupleStructPatternFields($) {
+  return ['(', sepBy(',', $._pattern), optional(','), ')'];
+}
 
 /**
  * Creates a rule to optionally match one or more of the rules separated by the separator.

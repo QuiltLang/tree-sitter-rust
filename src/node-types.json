@@ -3583,6 +3583,10 @@
             "named": true
           },
           {
+            "type": "quilt_hole",
+            "named": true
+          },
+          {
             "type": "super",
             "named": true
           }
@@ -3610,6 +3614,10 @@
           },
           {
             "type": "metavariable",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           },
           {
@@ -4503,6 +4511,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "quilt_hole",
             "named": true
           },
           {
